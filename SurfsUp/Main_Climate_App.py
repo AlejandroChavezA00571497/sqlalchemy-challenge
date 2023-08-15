@@ -28,6 +28,8 @@ station = Base.classes.station
 
 
 
+
+
 # Create our session (link) from Python to the DB
 session = Session(engine)
 
@@ -73,6 +75,7 @@ def precipitation():
 
 
     return jsonify(precipitation_list)
+    session.close()
 
 
 
@@ -80,7 +83,9 @@ def precipitation():
 #3.- Station Information into JSON:
 @app.route("/api/v1.0/stations")
 def stations():
-    all_stations_data = session.quey(station.id, station.station, station.name, station.latitude, station.longitude, station.elevation).all()
+    measurement = Base.classes.measurement
+    station = Base.classes.station
+    all_stations_data = session.query(station.id, station.station, station.name, station.latitude, station.longitude, station.elevation).all()
     all_stations_list = []
     for id, station, name, latitude, longitude, elevation in all_stations_data:
         station_dict = {}
@@ -93,6 +98,7 @@ def stations():
         all_stations_list.append(station_dict)
 
     return jsonify(all_stations_list)
+    session.close()
 
 
 
@@ -112,16 +118,56 @@ def tobs():
         tobs_list.append(tobs_dict)
 
     return jsonify(tobs_list)
+    session.close()
 
 
 
-#5.- TOBS Stats Start into JSON:
+#5.- Temperature Stats for only Start Date into JSON:
 @app.route("/api/v1.0/<start>")
-def stats_start():
-    most_recent_date =  session.query(measurement.date).order_by(measurement.date.desc()).first()
+def stats_start(start_date):
+    most_recent_date =  session.query(measurement.date).order_by(measurement.date.desc()).first().date
+    start_tobs_data = session.query(func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs)).filter(measurement.date >= start_date).all()
 
-   
-    return jsonify()
+    start_tobs_list = []
+    for min_temp, max_temp, avg_temp in start_tobs_data:
+        tobs_dict = {}
+        tobs_dict["start_date"] = start_date
+        tobs_dict["end_date"] = most_recent_date
+        tobs_dict["min_temp"] = min_temp
+        tobs_dict["max_temp"] = max_temp
+        tobs_dict["avg_temp"] = avg_temp
+        start_tobs_list.apend(tobs_dict)
+
+
+    return jsonify(start_tobs_list)
+    session.close()
+
+
+
+
+
+#6.- Temperature Stats for both Start and End Dates into JSON:
+@app.route("/api/v1.0/<start>/<end>")
+def stats_start_end(start_date, end_date):
+    start_end_tobs_data = session.query(func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs)).filter(measurement.date >= start_date and measurement.date < end_date).all()
+
+    start_end_tobs_list = []
+    for min_temp, max_temp, avg_temp in start_end_tobs_data:
+        tobs_dict = {}
+        tobs_dict["start_date"] = start_date
+        tobs_dict["end_date"] = end_date
+        tobs_dict["min_temp"] = min_temp
+        tobs_dict["max_temp"] = max_temp
+        tobs_dict["avg_temp"] = avg_temp
+        start_end_tobs_list.apend(tobs_dict)
+
+
+    return jsonify(start_end_tobs_list)
+    session.close()
+
+
+if __name__ == "__main__":
+    app.run(debug = True)
 
 
 
