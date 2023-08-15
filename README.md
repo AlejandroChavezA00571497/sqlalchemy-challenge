@@ -16,7 +16,7 @@ The main files for this project are contained in the SurfsUp directory which als
 
 
 Contributions:
--Data Analysis Bootcamp Classes
--https://flask.palletsprojects.com/en/2.3.x/quickstart/
--https://docs.sqlalchemy.org/en/20/
+- Data Analysis Bootcamp Classes
+- https://flask.palletsprojects.com/en/2.3.x/quickstart/
+- https://docs.sqlalchemy.org/en/20/
 
