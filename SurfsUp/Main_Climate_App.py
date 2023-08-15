@@ -54,8 +54,9 @@ def home():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start>/<end><br/>"
+        f"/api/v1.0/[start]<br/>"
+        f"/api/v1.0/[start]/[end]<br/>"
+        f"Dates should be written in YYYY-MM-DD format. Dates available are between 01/01/2010 and 23/08/2017"
     )
 
 
@@ -123,7 +124,7 @@ def tobs():
 
 
 #5.- Temperature Stats for only Start Date into JSON:
-@app.route("/api/v1.0/<start>")
+@app.route("/api/v1.0/<start_date>")
 def stats_start(start_date):
     most_recent_date =  session.query(measurement.date).order_by(measurement.date.desc()).first().date
     start_tobs_data = session.query(func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs)).filter(measurement.date >= start_date).all()
@@ -136,7 +137,7 @@ def stats_start(start_date):
         tobs_dict["min_temp"] = min_temp
         tobs_dict["max_temp"] = max_temp
         tobs_dict["avg_temp"] = avg_temp
-        start_tobs_list.apend(tobs_dict)
+        start_tobs_list.append(tobs_dict)
 
 
     return jsonify(start_tobs_list)
@@ -147,9 +148,9 @@ def stats_start(start_date):
 
 
 #6.- Temperature Stats for both Start and End Dates into JSON:
-@app.route("/api/v1.0/<start>/<end>")
+@app.route("/api/v1.0/<start_date>/<end_date>")
 def stats_start_end(start_date, end_date):
-    start_end_tobs_data = session.query(func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs)).filter(measurement.date >= start_date and measurement.date < end_date).all()
+    start_end_tobs_data = session.query(func.min(measurement.tobs), func.max(measurement.tobs), func.avg(measurement.tobs)).filter(measurement.date.between(start_date, end_date)).all()
 
     start_end_tobs_list = []
     for min_temp, max_temp, avg_temp in start_end_tobs_data:
@@ -159,7 +160,7 @@ def stats_start_end(start_date, end_date):
         tobs_dict["min_temp"] = min_temp
         tobs_dict["max_temp"] = max_temp
         tobs_dict["avg_temp"] = avg_temp
-        start_end_tobs_list.apend(tobs_dict)
+        start_end_tobs_list.append(tobs_dict)
 
 
     return jsonify(start_end_tobs_list)
